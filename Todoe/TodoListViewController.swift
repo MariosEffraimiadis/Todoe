@@ -13,12 +13,14 @@ class TodoListViewController: UITableViewController {  // if you change the name
    
     var itemArray = ["Finish IOS", "Learn IOS", "Practice IOS"] //creating a new item array
     
-    let defaults = UserDefaults.standard //standar user default (new object creation)
+    let defaults = UserDefaults.standard //standar user default (new object creation). UserDefaults is an "Interfrace to the user's default DB where you store key value pairs persistently accross launches of your app." !!!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        if let items = defaults.array(forKey: "TodoListArray") as? [String] //hard coded key. Cast as an array of sring.
+        //itemArray = defaults.array(forKey: "TodoListArray") as! [String]
+        //If you dont put the following then it is like you have saved our itemArray into are defaults (which is the file {com.effraimiadis.Todoe.plist} which you can find if you follow the result from : print(NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).last! as String)) but we havent used are saved item to load up the tableView (!!!). It will still get all data from the itemArray (who is not yet persistent).
+        if let items = defaults.array(forKey: "TodoListArray") as? [String] //hard coded key. Cast as an array of strings.
         { itemArray = items
         }
     }
@@ -67,7 +69,7 @@ class TodoListViewController: UITableViewController {  // if you change the name
         
             self.itemArray.append(textField.text!) //force unwrap because it will never nil (it can be an empty string but not nill) if the user puts nothing then he will have an empty cell (because it will be an empty string)
         
-            //saving the updated item array to the user default.
+            //saving the updated item array to our user defaults. The key "TodoListArray" is going to unidentify this array inside our user defaults.
             self.defaults.set(self.itemArray, forKey: "TodoListArray")
             
             self.tableView.reloadData() }

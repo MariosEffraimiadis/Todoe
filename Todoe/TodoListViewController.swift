@@ -13,8 +13,14 @@ class TodoListViewController: UITableViewController {  // if you change the name
    
     var itemArray = ["Finish IOS", "Learn IOS", "Practice IOS"] //creating a new item array
     
+    let defaults = UserDefaults.standard //standar user default (new object creation)
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        if let items = defaults.array(forKey: "TodoListArray") as? [String] //hard coded key. Cast as an array of sring.
+        { itemArray = items
+        }
     }
     
     //MARK - Creating Tableview Datasource Methods
@@ -44,35 +50,31 @@ class TodoListViewController: UITableViewController {  // if you change the name
         //print(itemArray[indexPath.row]) //prints the item array of a row
         
         if tableView.cellForRow(at: indexPath)?.accessoryType == .checkmark {
-            tableView.cellForRow(at: indexPath)?.accessoryType = .none //if it has a checkmare we change its accessory to none.
-        }
+            tableView.cellForRow(at: indexPath)?.accessoryType = .none }
+            //if it has a checkmare we change its accessory to none.
         else
-        {
-            tableView.cellForRow(at: indexPath)?.accessoryType = .checkmark
-        }
+        {tableView.cellForRow(at: indexPath)?.accessoryType = .checkmark}
         tableView.deselectRow(at: indexPath, animated: true)
     }
     
 //MARK - Add New Items
     @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
-        
         var textField = UITextField()
-        
-        //creating a new alert
-        let alert = UIAlertController(title: "Add New Todoey Item", message: "", preferredStyle: .alert)
+        let alert = UIAlertController(title: "Add New Todoey Item", message: "", preferredStyle: .alert) //creating a new alert
         //creating a UIAlert action (the button that you are going to press when you are done with writing your new to do list item)
         let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
             //what will happen once the user clicks the Add Item Button on our UIAlert (!!!)     (this is a closure) //print(textField.text)
         
             self.itemArray.append(textField.text!) //force unwrap because it will never nil (it can be an empty string but not nill) if the user puts nothing then he will have an empty cell (because it will be an empty string)
         
-            self.tableView.reloadData()
-        }
+            //saving the updated item array to the user default.
+            self.defaults.set(self.itemArray, forKey: "TodoListArray")
+            
+            self.tableView.reloadData() }
         alert.addTextField { (alertTextField) in                                                         //to add some text on the text field
             alertTextField.placeholder = "Create new Item"                           //in will show in grey and dissapear when we click on it
-            textField = alertTextField
-            }
-        
+            textField = alertTextField }
+
         alert.addAction(action) //we add the action to our alert.
         present(alert, animated: true, completion: nil) //to show our alert (The View controller we want to present is : alert)
     }

@@ -8,13 +8,12 @@
 
 import UIKit
 //subclassing
-class TodoListViewController: UITableViewController {  //If you change the name of the swift file to: TodoListViewController; then also change the class name (here).
-//We inherrited the UITableViewController. Adding a Table View Controller to the story board (instead of the a normal view controller) means that we dont need set ourselves as the delegate or datasource or link the ib-outlets. Xcode takes care of all of that.
-   
+class TodoListViewController: UITableViewController {                               //If you change the name of the swift file to:                          TodoListViewController; then also change the class name (here).
+                                                                //We inherrited the UITableViewController. Adding a Table View Controller to the story board (instead of the a normal view controller) means that we dont need set ourselves as the delegate or datasource or link the ib-outlets. Xcode takes care of all of that.
     var itemArray = [Item]() //creating a new item array
+    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("items.plist")
     
-    let defaults = UserDefaults.standard //standar user default (new object creation). UserDefaults is an "Interfrace to the user's default DB where you store key value pairs persistently accross launches of your app." !!!
-    
+                                                                    //let defaults = UserDefaults.standard //standar user default (new object creation). UserDefaults is an "Interfrace to the user's default DB where you store key value pairs persistently accross launches of your app." !!!
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -22,31 +21,27 @@ class TodoListViewController: UITableViewController {  //If you change the name 
         newItem.title = "Finish iOS"
         itemArray.append(newItem)
         
-        
         let newItem2 = Item()
         newItem.title = "Learn iOS"
         itemArray.append(newItem2)
-        
         
         let newItem3 = Item()
         newItem.title = "Practice iOS"
         itemArray.append(newItem3)
         
+        loadItems()
         
-        
-        //itemArray = defaults.array(forKey: "TodoListArray") as! [String]
-        //If you dont put the following then it is like you have saved our itemArray into are defaults (which is the file {com.effraimiadis.Todoe.plist} which you can find if you follow the result from: print(NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).last! as String)) but we havent used are saved item to load up the tableView (!!!). It will still get all data from the itemArray (who is not yet persistent).
-        if let items = defaults.array(forKey: "TodoListArray") as? [Item] //hard coded key. Cast as an array of strings.
+        /*if let items = defaults.array(forKey: "TodoListArray") as? [Item] { //hard coded key. Cast as an array of strings.
          itemArray = items
-        }
+        }*/
+                                                            /* itemArray = defaults.array(forKey: "TodoListArray") as! [String]
+                                                If you dont put the following then it is like you have saved our itemArray into are defaults (which is the file {com.effraimiadis.Todoe.plist} which you can find if you follow the result from: print(NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).last! as String)) but we havent used are saved item to load up the tableView (!!!). It will still get all data from the itemArray (who is not yet persistent).*/
     }
-    
     //MARK - Creating Tableview Datasource Methods (what the tableview should display and homw many rows we should have).
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return itemArray.count
-    //You start by writing table view. This creates 3 cells in my table view. (because we have 3 items only).
+                                                                                    //You start by writing table view. This creates 3 cells in my table view. (because we have 3 items only).
     }
-    
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         //you start by table view
         
@@ -69,7 +64,6 @@ class TodoListViewController: UITableViewController {  //If you change the name 
  
         return cell //The cell returns to the tableView and gets displayed.
         }
-        
         //cell.textLabel?.text = itemArray[indexPath.row].title (this is the label in every single cell)
         //We set the text property of every cell to equal the items in the item array and at the indexPath that we are currently populating.row. So the current row of the current indexPath.
     
@@ -80,17 +74,15 @@ class TodoListViewController: UITableViewController {  //If you change the name 
         
         itemArray[indexPath.row].done == !itemArray[indexPath.row].done // reverses the boolean true - false.
         
+        saveItems()
                                             /* if tableView.cellForRow(at: indexPath)?.accessoryType == .checkmark {
                                                     tableView.cellForRow(at: indexPath)?.accessoryType = .none }
                                             //if it has a checkmark we change its accessory to none.
                                                     else {tableView.cellForRow(at: indexPath)?.accessoryType = .checkmark }*/
-    
-        tableView.reloadData()
+                                            //tableView.reloadData() (exists in saveItems above.
     
         tableView.deselectRow(at: indexPath, animated: true)  //so that it will not stay gray everytime we click on an array
- 
  }
-    
     //MARK - Add New Items
     @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
         var textField = UITextField()
@@ -104,9 +96,8 @@ class TodoListViewController: UITableViewController {  //If you change the name 
             self.itemArray.append(newItem) //force unwrap because it will never nil (it can be an empty string but not nill) if the user puts nothing then he will have an empty cell (because it will be an empty string)
         
                 //saving the updated item array to our user defaults. The key "TodoListArray" is going to unidentify this array inside our user defaults.
-            self.defaults.set(self.itemArray, forKey: "TodoListArray")//key identifies this array inside our user defaults
-            
-            self.tableView.reloadData() } //make sure you reload (if you dont reload, it will not take into the account the new array that has the extra item (hence it will not appear.
+            self.saveItems()
+             } //make sure you reload (if you dont reload, it will not take into the account the new array that has the extra item (hence it will not appear.
         
         alert.addTextField { (alertTextField) in                                                         //to add some text on the text field
             alertTextField.placeholder = "Create new Item"                           //in will show in grey and dissapear when we click on it
@@ -115,5 +106,31 @@ class TodoListViewController: UITableViewController {  //If you change the name 
         alert.addAction(action) //we add the action to our alert.
         present(alert, animated: true, completion: nil) //to show our alert (The View controller we want to present is : alert)
     }
+//}
 
+//MARK - Model Manupulation Methods
+
+func saveItems(){
+    
+    let encoder = PropertyListEncoder()
+    do {
+        let data = try encoder.encode(itemArray) //it will encode our (data) itemArray to a propertyList.
+        try data.write(to: dataFilePath!) //how to write our data to our filePath (location) which is written at the top.
+    } catch {
+        print("Error encoding item array, \(error)")
+    }
+    //self.defaults.set(self.itemArray, forKey: "TodoListArray")//key identifies this array inside our user defaults
+    
+    self.tableView.reloadData()
+}
+func loadItems(){
+    if let data = try? Data(contentsOf: dataFilePath!){
+        let decoder = PropertyListDecoder()
+        do {
+        itemArray = try decoder.decode([Item].self, from: data)
+        } catch {
+        print("error decoding item array \(error)")
+        }
+    }
+}
 }
